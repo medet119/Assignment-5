@@ -1,0 +1,76 @@
+---
+title: "ANA 515 Assignment 2, Loading, Saving, and Describing Data"
+author: "Tomiris"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment = "##", prompt = F, message = F, warning = F
+)
+```
+
+# Section 1: Description of the data 
+
+I'm working with the Amazon dataset. This dataset contains over 10,000 different Amazon products and their information, user reviews, and so on for the year of 2020. The data is downloaded from https://www.kaggle.com/datasets/nguyenngocphung/10000-amazon-products-dataset in csv format. 
+
+# Section 2: Reading the data into R
+
+```{r}
+# Using the fread() function from 'data.table' package
+# Using it because the function is very fast at reading large volume of data 
+# the amazon data set has so many rows and its size is more than 20 MB
+# reading first 14 columns since they contain information
+amazon <- data.table::fread("Amazon_Products.csv")[,1:14] 
+```
+
+# Section 3: Clean the data
+
+```{r}
+amazon <- amazon[,c(1:9)]  # taking the first 9 columns for convenience
+# Renaming variables
+colnames(amazon) <- c("ID","product","manufacturer","price","num_available","num_reviews","num_ans_ques","avg_rating","cat_and_sub_cat")
+# Changing data types of some variables
+amazon$price <- as.numeric(substring(amazon$price, 3))
+amazon$avg_rating <- as.numeric(substring(amazon$avg_rating, 1, 4))
+amazon$num_ans_ques <- as.numeric(amazon$num_ans_ques)
+amazon$num_reviews <- as.numeric(amazon$num_reviews)
+```
+
+# Section 4: Characteristics of the data
+
+This dataframe has `r nrow(amazon)` rows and `r ncol(amazon)` columns. The names of the columns and a brief description of each are in the table below:
+
+Column Names  | Brief Descriptions
+------------- | -------------
+ID            | Unique ID of the product
+product       | Product name
+manufacturer  | Manufacturer name
+price         | Price of the product in £ 
+num_available | Number of products available in the stock
+num_reviews   | Number of reviews
+num_ans_ques  | Number of answered questions
+avg_rating    | Average rating of reviews
+cat_and_sub_cat | Amazon category and sub category
+
+# Section 5: Summary statistics
+
+```{r}
+# Selecting the three columns
+amazon_sub <- amazon[,c("price","num_reviews","avg_rating")]
+# Creating a function that calculates the required summary statistics
+summ <- function(df){
+  su <- data.frame(Minimum = apply(df, 2, min, na.rm = TRUE),
+                   Maximum = apply(df, 2, max, na.rm = TRUE),
+                   Mean = apply(df, 2, mean, na.rm = TRUE),
+                   No_Missing = apply(df, 2, function(x) sum(is.na(x))))
+  return(su)  
+}
+# Assigning the result of summary statistics of the dataset
+amazon_summary <- summ(amazon_sub)
+knitr::kable(amazon_summary)
+```
+
+
